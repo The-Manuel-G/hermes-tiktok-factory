@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hermes Agent — TikTok Factory & Bot Farm Control Center</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background-color: #0b0f19; color: #e2e8f0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+    .card { background: #111827; border: 1px solid #1f2937; border-radius: 0.75rem; }
+    .tab-btn.active { background: #2563eb; color: #ffffff; font-weight: 600; }
+    .badge { padding: 0.15rem 0.55rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- TOP HEADER -->
+  <header class="bg-slate-900/90 border-b border-slate-800 px-6 py-3.5 sticky top-0 z-30 backdrop-blur">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center font-bold text-lg shadow-lg shadow-blue-600/30">H</div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-bold text-white tracking-tight">HERMES AGENT · TikTok Factory & Farm</h1>
+            <span id="headerEngineBadge" class="badge bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Motor Hermes Activo</span>
+          </div>
+          <p class="text-xs text-slate-400">Dominio Catch-All: <span class="text-blue-400 font-mono">example.com</span> · Madre Principal: <span class="text-amber-400 font-mono">@colombohurdimmigrationla</span></p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button onclick="quickCreateAccount()" class="px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition shadow">
+          + Crear Cuenta Ahora (Sin Teléfono)
+        </button>
+        <button id="topKillBtn" onclick="toggleKillSwitch()" class="px-3.5 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition shadow">
+          PAUSA TOTAL (KILL SWITCH)
+        </button>
+        <a href="/api/export/csv" class="px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition">
+          ⬇ Exportar CSV
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- 9 NAVIGATION TABS -->
+  <nav class="bg-slate-900/60 border-b border-slate-800 px-6 py-2 overflow-x-auto">
+    <div class="max-w-7xl mx-auto flex items-center gap-1.5 text-xs">
+      <button onclick="switchTab(1)" id="tab-btn-1" class="tab-btn active px-3.5 py-2 rounded-lg text-slate-300 hover:bg-slate-800 transition whitespace-nowrap">1. Resumen</button>
+      <button onclick="switchTab(2)" id="tab-btn-2" class="tab-btn px-3.5 py-2 rounded-lg text-slate-300 hover:bg-slate-800 transition whitespace-nowrap">2. Fábrica</button>
+      <button onclick="switchTab(3)" id="tab-btn-3" class="tab-btn px-3.5 py-2 rounded-lg text-slate-300 hover:bg-slate-800 transition whitespace-nowrap">3. Cuentas (<span id="navAccCount">0</span>)</button>
+      <button onclick="switchTab(4)" id="tab-btn-4" class="tab-btn px-3.5 py-2 rounded-lg text-slate-300 hover:bg-slate-800 transition whitespace-nowrap">4. Farm (Madres)</button>
+      <button onclick="switchTab(5)" id="tab-btn-5" class="tab-btn px-3.5 py-2 rounded-lg text-slate-300 hover:bg-slate-800 transition whitespace-nowrap">5. Proxies (<span id="navProxyCount">10</span>)</button>
+      <button onclick="switchTab(6)" id="tab-btn-6" class="tab-btn px-3.5 py-2 rounded-lg text-slate-300 hover:bg-slate-800 transition whitespace-nowrap">6. Correos (IMAP)</button>
+      <button onclick="switchTab(7)" id="tab-btn-7" class="tab-btn px-3.5 py-2 rounded-lg text-slate-300 hover:bg-slate-800 transition whitespace-nowrap">7. Config (config.yaml)</button>
+      <button onclick="switchTab(8)" id="tab-btn-8" class="tab-btn px-3.5 py-2 rounded-lg text-slate-300 hover:bg-slate-800 transition whitespace-nowrap">8. Logs y Alertas</button>
+      <button onclick="switchTab(9)" id="tab-btn-9" class="tab-btn px-3.5 py-2 rounded-lg text-slate-300 hover:bg-slate-800 transition whitespace-nowrap">9. Controles Globales</button>
+    </div>
+  </nav>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toastBox" class="fixed bottom-5 right-5 z-50 hidden px-4 py-3 rounded-xl bg-blue-600 text-white text-sm font-medium shadow-2xl border border-blue-400/30"></div>
+
+  <!-- MAIN CONTENT -->
+  <main class="max-w-7xl w-full mx-auto px-6 py-6 flex-1 space-y-6">
+
+    <!-- ==================== PANTALLA 1: RESUMEN ==================== -->
+    <section id="screen-1" class="space-y-6">
+      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+        <div class="card p-4">
+          <p class="text-xs text-slate-400">Cuentas Totales</p>
+          <p id="kpiTotales" class="text-2xl font-bold text-white mt-1">0</p>
+        </div>
+        <div class="card p-4">
+          <p class="text-xs text-slate-400">Activas / Calentando</p>
+          <p id="kpiActivas" class="text-2xl font-bold text-emerald-400 mt-1">0</p>
+        </div>
+        <div class="card p-4">
+          <p class="text-xs text-slate-400">Enfermas / Pausadas</p>
+          <p id="kpiEnfermas" class="text-2xl font-bold text-amber-400 mt-1">0</p>
+        </div>
+        <div class="card p-4">
+          <p class="text-xs text-slate-400">Creadas Hoy</p>
+          <p id="kpiCreadasHoy" class="text-2xl font-bold text-blue-400 mt-1">0</p>
+        </div>
+        <div class="card p-4">
+          <p class="text-xs text-slate-400">Pendientes</p>
+          <p id="kpiPendientes" class="text-2xl font-bold text-purple-400 mt-1">0</p>
+        </div>
+        <div class="card p-4">
+          <p class="text-xs text-slate-400">Proxies Sticky Libres</p>
+          <p id="kpiProxiesLibres" class="text-2xl font-bold text-cyan-400 mt-1">0/10</p>
+        </div>
+        <div class="card p-4">
+          <p class="text-xs text-slate-400">Acciones Hoy</p>
+          <p id="kpiAccionesHoy" class="text-2xl font-bold text-indigo-400 mt-1">0</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="card p-5 lg:col-span-2">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-sm font-bold text-white uppercase tracking-wider">Últimas Acciones Ejecutadas por Hermes Agent</h2>
+            <div class="flex gap-2">
+              <button onclick="dispatchCommand('run_warmup_now')" class="px-3 py-1.5 rounded bg-blue-600/20 text-blue-400 border border-blue-500/30 text-xs hover:bg-blue-600/30">▶ Ciclo Warm-up</button>
+              <button onclick="dispatchCommand('run_farm_now')" class="px-3 py-1.5 rounded bg-amber-600/20 text-amber-400 border border-amber-500/30 text-xs hover:bg-amber-600/30">▶ Ciclo Farm</button>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="text-slate-400 border-b border-slate-800">
+                <tr>
+                  <th class="pb-2">Bot</th>
+                  <th class="pb-2">Tipo de Acción</th>
+                  <th class="pb-2">Madre Objetivo</th>
+                  <th class="pb-2">Duración</th>
+                  <th class="pb-2">Estado</th>
+                  <th class="pb-2">Hora</th>
+                </tr>
+              </thead>
+              <tbody id="resumenAccionesBody" class="divide-y divide-slate-800/60"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card p-5 space-y-4">
+          <h2 class="text-sm font-bold text-white uppercase tracking-wider">Arquitectura & Reglas Anti-Baneo</h2>
+          <ul class="text-xs text-slate-300 space-y-2.5">
+            <li class="flex justify-between"><span>Motor de Ejecución:</span> <span class="text-emerald-400 font-mono">hermes.exe (Cron)</span></li>
+            <li class="flex justify-between"><span>Asignación de Proxy:</span> <span class="text-blue-400 font-mono">1:1 Sticky Estricto</span></li>
+            <li class="flex justify-between"><span>Flujo Sin Teléfono:</span> <span class="text-emerald-400 font-mono">/signup/phone-or-email/email</span></li>
+            <li class="flex justify-between"><span>Audio Navegador:</span> <span class="text-emerald-400 font-mono">100% Silenciado (--mute-audio)</span></li>
+            <li class="flex justify-between"><span>Dominio Catch-All:</span> <span class="text-amber-400 font-mono">*@example.com</span></li>
+            <li class="flex justify-between"><span>Backoff Rate-Limit:</span> <span class="text-rose-400 font-mono">Pausa exacta 24h</span></li>
+          </ul>
+          <div class="pt-3 border-t border-slate-800">
+            <p class="text-xs text-slate-400 mb-1">Enlace Público Cloudflare Tunnel:</p>
+            <a id="publicUrlLink" href="#" target="_blank" class="text-xs text-blue-400 underline break-all font-mono">Generando túnel...</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PANTALLA 2: FÁBRICA ==================== -->
+    <section id="screen-2" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="card p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-base font-bold text-white">Fábrica de Cuentas (Sin Verificación Telefónica)</h2>
+            <span id="factoryStatusBadge" class="badge bg-emerald-500/20 text-emerald-400">Fábrica Activa</span>
+          </div>
+          <p class="text-xs text-slate-400">Hermes Agent selecciona un proxy sticky libre de la geo elegida, genera una huella digital coherente (UA + Timezone + Locale + Canvas Seed), crea un alias único en <code class="text-blue-400">@example.com</code> y fuerza el flujo de registro por correo saltando el modal QR.</p>
+
+          <div class="grid grid-cols-2 gap-4 pt-2">
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Cantidad a crear ahora</label>
+              <input id="fabCantidad" type="number" value="1" min="1" max="10" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white" />
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">País / Geo del Proxy</label>
+              <select id="fabPais" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white">
+                <option value="US">Estados Unidos (US - 6 proxies)</option>
+                <option value="ES">España (ES - Madrid)</option>
+                <option value="GB">Reino Unido (GB - London)</option>
+                <option value="DE">Alemania (DE - Frankfurt)</option>
+                <option value="PL">Polonia (PL - Warsaw)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Nicho de Cuenta</label>
+              <select id="fabNicho" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white">
+                <option value="inmigracion_legal">Inmigración & Legal (Apoyo Colombo)</option>
+                <option value="lifestyle">Lifestyle & General</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Meta Diaria Automática</label>
+              <input id="fabMetaDiaria" type="number" value="5" min="1" max="50" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white" />
+            </div>
+          </div>
+
+          <div class="flex flex-wrap gap-3 pt-4">
+            <button onclick="createFromFactoryForm()" class="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-600/30 transition">
+              🚀 Crear Ahora con Hermes Agent
+            </button>
+            <button onclick="saveFactorySettings(true)" class="px-4 py-2.5 rounded-lg bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 text-xs font-semibold hover:bg-emerald-600/30 transition">
+              Guardar y Mantener Activa
+            </button>
+            <button onclick="saveFactorySettings(false)" class="px-4 py-2.5 rounded-lg bg-amber-600/20 text-amber-400 border border-amber-500/30 text-xs font-semibold hover:bg-amber-600/30 transition">
+              ⏸ Pausar Fábrica Programada
+            </button>
+          </div>
+        </div>
+
+        <div class="card p-6 space-y-4">
+          <h3 class="text-sm font-bold text-white uppercase tracking-wider">Flujo Anti-Detección Ejecutado por Hermes (11 Pasos)</h3>
+          <ol class="text-xs text-slate-300 space-y-2 list-decimal list-inside">
+            <li>Selecciona proxy libre con la geo objetivo (1:1 sticky).</li>
+            <li>Genera contexto persistente Chromium con Timezone, Locale, Viewport y semillas Canvas/WebGL coherentes.</li>
+            <li>Genera alias único <code class="text-blue-400">tk####@example.com</code> y contraseña robusta.</li>
+            <li>Navega directo a <code class="text-emerald-400">tiktok.com/signup/phone-or-email/email</code> (evita QR).</li>
+            <li>Si aparece modal QR, pulsa automáticamente el botón <code class="text-amber-400">Skip</code>.</li>
+            <li>Rellena fecha (&gt;21 años), alias de correo y contraseña única.</li>
+            <li>Extrae el código de 6 dígitos por IMAP (<code class="text-blue-400">imap.porkbun.com</code>).</li>
+            <li>Si TikTok solicita teléfono, busca <code class="text-amber-400">Omitir / Skip</code> o rota de proxy.</li>
+            <li>Configura username natural, bio del nicho y avatar sin repetir.</li>
+            <li>Guarda el contexto en <code class="text-slate-400">contexts/account_ID/</code>.</li>
+            <li>Inicia en <code class="text-emerald-400">etapa_calentamiento = Día 1</code>.</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PANTALLA 3: CUENTAS ==================== -->
+    <section id="screen-3" class="hidden space-y-4">
+      <div class="card p-5">
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+          <div>
+            <h2 class="text-base font-bold text-white">Inventario de Cuentas Bot y Contextos Persistentes</h2>
+            <p class="text-xs text-slate-400">Cada cuenta tiene su propio directorio de navegador aislado y 1 proxy sticky exclusivo.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <input id="filterAccountInput" oninput="renderAccountsTable()" type="text" placeholder="Filtrar por usuario, correo o geo..." class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white" />
+            <button onclick="dispatchCommand('run_warmup_now')" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-500">Avanzar Calentamiento (+1 Día)</button>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="text-slate-400 border-b border-slate-800">
+              <tr>
+                <th class="pb-2">ID</th>
+                <th class="pb-2">Username</th>
+                <th class="pb-2">Alias Email (@example.com)</th>
+                <th class="pb-2">Password</th>
+                <th class="pb-2">Estado</th>
+                <th class="pb-2">Etapa Warmup</th>
+                <th class="pb-2">Salud</th>
+                <th class="pb-2">Proxy Sticky (Geo)</th>
+                <th class="pb-2">Fingerprint</th>
+                <th class="pb-2">Madre</th>
+                <th class="pb-2">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="cuentasTableBody" class="divide-y divide-slate-800/70"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PANTALLA 4: FARM (MADRES) ==================== -->
+    <section id="screen-4" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="card p-5 lg:col-span-2 space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-base font-bold text-white">Cuentas Madre Protegidas & Apoyo Bot</h2>
+              <p class="text-xs text-slate-400">Los bots ejecutan acciones escalonadas (ver video completo, like, follow, comentario) hacia tus cuentas principales.</p>
+            </div>
+            <button onclick="dispatchCommand('run_farm_now')" class="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold shadow">
+              🔥 Ejecutar Ronda de Apoyo Ahora
+            </button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="text-slate-400 border-b border-slate-800">
+                <tr>
+                  <th class="pb-2">ID</th>
+                  <th class="pb-2">Cuenta Madre</th>
+                  <th class="pb-2">Nicho</th>
+                  <th class="pb-2">Bots Asignados</th>
+                  <th class="pb-2">Acciones Recibidas</th>
+                  <th class="pb-2">Meta Seguidores</th>
+                  <th class="pb-2">Horario Activo</th>
+                  <th class="pb-2">Acción</th>
+                </tr>
+              </thead>
+              <tbody id="madresTableBody" class="divide-y divide-slate-800/70"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card p-5 space-y-4">
+          <h3 class="text-sm font-bold text-white uppercase tracking-wider">Ordenar Seguimiento y Comentarios a un Perfil Específico</h3>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Perfil de TikTok Objetivo (@usuario)</label>
+            <input id="newMadreUsername" type="text" placeholder="@perfil_especifico" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white" />
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Comentario Personalizado (Opcional)</label>
+            <input id="customFarmComment" type="text" placeholder="Ej: Excelente contenido legal,100% recomendados 👏" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white" />
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Objetivo de Seguidores / Interacciones</label>
+            <input id="newMadreObj" type="number" value="5000" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white" />
+          </div>
+          <button onclick="addMadreAccount()" class="w-full py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold">
+            + Agregar Perfil Objetivo al Compendio
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PANTALLA 5: PROXIES ==================== -->
+    <section id="screen-5" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="card p-5 lg:col-span-2 space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-base font-bold text-white">Pool de Proxies Sticky (Webshare 1:1)</h2>
+              <p class="text-xs text-slate-400">Regla activa: 1 proxy exclusivo por cuenta. Nunca se comparte IP entre dos bots activos.</p>
+            </div>
+            <button onclick="checkAllProxies()" class="px-3.5 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold">
+              ⚡ Comprobar Salud de Todos
+            </button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="text-slate-400 border-b border-slate-800">
+                <tr>
+                  <th class="pb-2">ID</th>
+                  <th class="pb-2">Host:Puerto</th>
+                  <th class="pb-2">Usuario</th>
+                  <th class="pb-2">Geo / Ciudad</th>
+                  <th class="pb-2">Timezone</th>
+                  <th class="pb-2">Asignación Sticky</th>
+                  <th class="pb-2">Salud</th>
+                </tr>
+              </thead>
+              <tbody id="proxiesTableBody" class="divide-y divide-slate-800/70"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card p-5 space-y-4">
+          <h3 class="text-sm font-bold text-white uppercase tracking-wider">Agregar Más Proxies en Lote</h3>
+          <p class="text-xs text-slate-400">Formato: <code class="text-blue-400">Host:Puerto:Usuario:Contraseña</code> (uno por línea).</p>
+          <textarea id="bulkProxiesInput" rows="6" placeholder="192.0.2.1:6014:user:pass" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-xs font-mono text-white"></textarea>
+          <button onclick="addBulkProxies()" class="w-full py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold">
+            + Importar Proxies al Pool
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PANTALLA 6: CORREOS (IMAP) ==================== -->
+    <section id="screen-6" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="card p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-base font-bold text-white">Integración Catch-All IMAP (<span class="text-blue-400">example.com</span>)</h2>
+            <button onclick="verifyMailAndDns()" class="px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold">
+              🔍 Auditar IMAP + SPF/DKIM/DMARC
+            </button>
+          </div>
+          <div id="mailAuditResult" class="p-3.5 rounded-lg bg-slate-900 border border-slate-800 text-xs space-y-1.5 text-slate-300">
+            Haz clic en "Auditar IMAP + SPF/DKIM/DMARC" para verificar el estado en vivo de Porkbun (<code class="text-blue-400">imap.porkbun.com:993</code>) y los registros DNS de <code class="text-blue-400">example.com</code>.
+          </div>
+
+          <div class="pt-3 border-t border-slate-800 space-y-2">
+            <h3 class="text-xs font-bold text-slate-300 uppercase">Probador de Extractor Regex (Código 6 dígitos de TikTok)</h3>
+            <textarea id="sampleEmailText" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs font-mono text-white">Your TikTok verification code is 849204. To verify your account, enter this code in TikTok: https://www.tiktok.com/verify?token=abc</textarea>
+            <button onclick="testMailRegex()" class="px-3 py-1.5 rounded bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 text-xs font-semibold">Probar Extracción</button>
+            <p id="regexTestOutput" class="text-xs font-mono text-emerald-400"></p>
+          </div>
+        </div>
+
+        <div class="card p-5 space-y-4">
+          <h3 class="text-sm font-bold text-white uppercase tracking-wider">Alias Generados y Estado de Quemado</h3>
+          <div class="overflow-x-auto max-h-80">
+            <table class="w-full text-left text-xs">
+              <thead class="text-slate-400 border-b border-slate-800">
+                <tr>
+                  <th class="pb-2">Alias Catch-All</th>
+                  <th class="pb-2">Fallos</th>
+                  <th class="pb-2">Estado</th>
+                  <th class="pb-2">Último Código</th>
+                  <th class="pb-2">Creado</th>
+                </tr>
+              </thead>
+              <tbody id="aliasesTableBody" class="divide-y divide-slate-800/70"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PANTALLA 7: CONFIG (config.yaml) ==================== -->
+    <section id="screen-7" class="hidden space-y-4">
+      <div class="card p-5 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 class="text-base font-bold text-white">Editor Unificado en Caliente (<code class="text-blue-400">config.yaml</code>)</h2>
+            <p class="text-xs text-slate-400">Cualquier cambio aquí se valida y es leído en caliente por Hermes Agent en su siguiente ciclo.</p>
+          </div>
+          <button onclick="saveYamlConfig()" class="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow">
+            💾 Validar y Aplicar config.yaml en Caliente
+          </button>
+        </div>
+        <textarea id="yamlEditor" rows="24" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-xs font-mono text-emerald-300 leading-relaxed"></textarea>
+      </div>
+    </section>
+
+    <!-- ==================== PANTALLA 8: LOGS Y ALERTAS ==================== -->
+    <section id="screen-8" class="hidden space-y-4">
+      <div class="card p-5 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <h2 class="text-base font-bold text-white">Stream de Logs Estructurados y Alertas de Hermes Agent</h2>
+          <select id="logComponentFilter" onchange="renderLogsTable()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white">
+            <option value="">Todos los componentes</option>
+            <option value="account_factory">account_factory</option>
+            <option value="mail_worker">mail_worker</option>
+            <option value="warmup_worker">warmup_worker</option>
+            <option value="farm_worker">farm_worker</option>
+            <option value="health_worker">health_worker</option>
+            <option value="proxy_pool">proxy_pool</option>
+            <option value="orchestrator">orchestrator</option>
+          </select>
+        </div>
+        <div class="overflow-x-auto max-h-[520px]">
+          <table class="w-full text-left text-xs font-mono">
+            <thead class="text-slate-400 border-b border-slate-800">
+              <tr>
+                <th class="pb-2">Timestamp</th>
+                <th class="pb-2">Nivel</th>
+                <th class="pb-2">Componente</th>
+                <th class="pb-2">Cuenta</th>
+                <th class="pb-2">Mensaje</th>
+              </tr>
+            </thead>
+            <tbody id="logsTableBody" class="divide-y divide-slate-800/60"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PANTALLA 9: CONTROLES GLOBALES ==================== -->
+    <section id="screen-9" class="hidden space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="card p-6 border-rose-500/30 space-y-4">
+          <h2 class="text-base font-bold text-white">Interruptor de Emergencia (Kill Switch)</h2>
+          <p class="text-xs text-slate-400">Congela inmediatamente todas las creaciones de cuentas, sesiones de calentamiento y acciones de farm en Hermes Agent.</p>
+          <button id="bigKillSwitchBtn" onclick="toggleKillSwitch()" class="w-full py-4 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm shadow-xl transition">
+            🛑 ACTIVAR PAUSA TOTAL (KILL SWITCH)
+          </button>
+        </div>
+
+        <div class="card p-6 space-y-4">
+          <h2 class="text-base font-bold text-white">Mantenimiento, Auditoría y Exportación</h2>
+          <div class="grid grid-cols-1 gap-3">
+            <button onclick="retryFailedAccounts()" class="w-full py-3 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 text-xs font-bold">
+              🔄 Reintentar Todas las Cuentas Fallidas / En Pausa
+            </button>
+            <button onclick="dispatchCommand('run_health_now')" class="w-full py-3 rounded-lg bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 border border-amber-500/30 text-xs font-bold">
+              🩺 Ejecutar Health Worker (Detección de Shadowban y Salud)
+            </button>
+            <a href="/api/export/csv" class="block text-center w-full py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold">
+              📥 Descargar CSV Completo de Cuentas, Credenciales y Proxies
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    let STATE = null;
+    let yamlEdited = false;
+
+    function showToast(msg) {
+      const box = document.getElementById('toastBox');
+      box.textContent = msg;
+      box.classList.remove('hidden');
+      setTimeout(() => box.classList.add('hidden'), 3800);
+    }
+
+    function switchTab(num) {
+      for (let i = 1; i <= 9; i++) {
+        document.getElementById('screen-' + i).classList.toggle('hidden', i !== num);
+        document.getElementById('tab-btn-' + i).classList.toggle('active', i === num);
+      }
+    }
+
+    async function fetchState() {
+      try {
+        const res = await fetch('/api/state');
+        STATE = await res.json();
+        renderAll();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function renderAll() {
+      if (!STATE) return;
+      const k = STATE.kpis;
+      document.getElementById('kpiTotales').textContent = k.totales;
+      document.getElementById('kpiActivas').textContent = k.activas;
+      document.getElementById('kpiEnfermas').textContent = k.enfermas;
+      document.getElementById('kpiCreadasHoy').textContent = k.creadas_hoy;
+      document.getElementById('kpiPendientes').textContent = k.pendientes;
+      document.getElementById('kpiProxiesLibres').textContent = `${k.proxies_libres}/${k.proxies_totales}`;
+      document.getElementById('kpiAccionesHoy').textContent = k.acciones_hoy;
+      document.getElementById('navAccCount').textContent = k.totales;
+      document.getElementById('navProxyCount').textContent = k.proxies_totales;
+
+      // Public URL
+      const pubEl = document.getElementById('publicUrlLink');
+      if (STATE.public_url) {
+        pubEl.href = STATE.public_url;
+        pubEl.textContent = STATE.public_url;
+      } else {
+        pubEl.href = STATE.local_url;
+        pubEl.textContent = STATE.local_url + ' (Local activo)';
+      }
+
+      // Kill switch status
+      const badge = document.getElementById('headerEngineBadge');
+      const topKill = document.getElementById('topKillBtn');
+      const bigKill = document.getElementById('bigKillSwitchBtn');
+      if (STATE.killswitch) {
+        badge.className = 'badge bg-rose-500/20 text-rose-400 border border-rose-500/30';
+        badge.textContent = 'PAUSA TOTAL ACTIVA';
+        topKill.textContent = '▶ REANUDAR MOTOR HERMES';
+        bigKill.textContent = '▶ DESACTIVAR KILL SWITCH Y REANUDAR HERMES';
+      } else {
+        badge.className = 'badge bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+        badge.textContent = 'Motor Hermes Activo';
+        topKill.textContent = 'PAUSA TOTAL (KILL SWITCH)';
+        bigKill.textContent = '🛑 ACTIVAR PAUSA TOTAL (KILL SWITCH)';
+      }
+
+      // Resumen acciones
+      const actBody = document.getElementById('resumenAccionesBody');
+      actBody.innerHTML = (STATE.acciones || []).slice(0, 12).map(a => `
+        <tr class="hover:bg-slate-800/40">
+          <td class="py-2 font-mono text-blue-400">@${a.username_bot || 'bot'}</td>
+          <td class="py-2 text-slate-200">${a.tipo}</td>
+          <td class="py-2 font-mono text-amber-400">${a.madre_username || '-'}</td>
+          <td class="py-2 text-slate-400">${a.duracion}s</td>
+          <td class="py-2"><span class="badge bg-emerald-500/20 text-emerald-400">${a.resultado}</span></td>
+          <td class="py-2 text-slate-500">${(a.ts || '').slice(11, 19)}</td>
+        </tr>
+      `).join('');
+
+      renderAccountsTable();
+      renderMadresTable();
+      renderProxiesTable();
+      renderAliasesTable();
+      renderLogsTable();
+
+      if (!yamlEdited && STATE.raw_yaml) {
+        document.getElementById('yamlEditor').value = STATE.raw_yaml;
+      }
+    }
+
+    function renderAccountsTable() {
+      if (!STATE) return;
+      const q = (document.getElementById('filterAccountInput').value || '').toLowerCase();
+      const rows = (STATE.cuentas || []).filter(c =>
+        !q ||
+        (c.username || '').toLowerCase().includes(q) ||
+        (c.alias_email || '').toLowerCase().includes(q) ||
+        (c.proxy_geo || '').toLowerCase().includes(q) ||
+        (c.estado || '').toLowerCase().includes(q)
+      );
+      document.getElementById('cuentasTableBody').innerHTML = rows.map(c => `
+        <tr class="hover:bg-slate-800/40">
+          <td class="py-2.5 font-mono text-slate-400">#${c.id}</td>
+          <td class="py-2.5 font-mono font-bold text-white">@${c.username || 'pendiente'}</td>
+          <td class="py-2.5 font-mono text-blue-400">${c.alias_email}</td>
+          <td class="py-2.5 font-mono text-slate-400">${c.password}</td>
+          <td class="py-2.5"><span class="badge ${c.estado === 'pausada' ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/20 text-emerald-400'}">${c.estado}</span></td>
+          <td class="py-2.5 font-semibold text-cyan-400">Día ${c.etapa_calentamiento}/7</td>
+          <td class="py-2.5 text-emerald-400 font-bold">${c.salud}%</td>
+          <td class="py-2.5 font-mono text-xs">${c.proxy_host ? `${c.proxy_host}:${c.proxy_puerto} (${c.proxy_geo})` : 'Sin proxy'}</td>
+          <td class="py-2.5 text-slate-400 text-xs">${c.device_model || 'Chromium'} · ${c.viewport || ''}</td>
+          <td class="py-2.5 font-mono text-amber-400">${c.madre_username || '@colombohurdimmigrationla'}</td>
+          <td class="py-2.5 space-x-1 whitespace-nowrap">
+            <input id="code-inp-${c.id}" type="text" maxlength="6" placeholder="Código 6 díg" class="w-24 bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-xs font-mono text-white" />
+            <button onclick="submitAccountCode(${c.id})" class="px-2 py-1 rounded bg-emerald-600 text-white font-bold hover:bg-emerald-500">Verificar</button>
+            ${c.estado === 'pausada'
+              ? `<button onclick="accountAction(${c.id}, 'resume')" class="px-2 py-1 rounded bg-emerald-600/30 text-emerald-300 hover:bg-emerald-600/50">Reanudar</button>`
+              : `<button onclick="accountAction(${c.id}, 'pause')" class="px-2 py-1 rounded bg-amber-600/30 text-amber-300 hover:bg-amber-600/50">Pausar</button>`
+            }
+            <button onclick="accountAction(${c.id}, 'rotate_proxy')" class="px-2 py-1 rounded bg-blue-600/30 text-blue-300 hover:bg-blue-600/50">Rotar IP</button>
+            <button onclick="accountAction(${c.id}, 'delete')" class="px-2 py-1 rounded bg-rose-600/30 text-rose-300 hover:bg-rose-600/50">Eliminar</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderMadresTable() {
+      if (!STATE) return;
+      document.getElementById('madresTableBody').innerHTML = (STATE.madres || []).map(m => `
+        <tr class="hover:bg-slate-800/40">
+          <td class="py-2.5 font-mono text-slate-400">#${m.id}</td>
+          <td class="py-2.5 font-mono font-bold text-amber-400">${m.username}</td>
+          <td class="py-2.5 text-slate-300">${m.nicho}</td>
+          <td class="py-2.5 font-bold text-white">${m.bots_asignados} bots</td>
+          <td class="py-2.5 font-bold text-emerald-400">${m.acciones_recibidas} acciones</td>
+          <td class="py-2.5 text-slate-300">${m.objetivo_seguidores}</td>
+          <td class="py-2.5 font-mono text-slate-400">${m.horario_activo}</td>
+          <td class="py-2.5 space-x-2">
+            <button onclick="assignAllBotsToMadre(${m.id})" class="px-2.5 py-1 rounded bg-blue-600/30 text-blue-300 text-xs">Asignar Todos los Bots</button>
+            <button onclick="runFarmForProfile(${m.id})" class="px-2.5 py-1 rounded bg-amber-600/30 text-amber-300 text-xs">Seguir y Comentar Ahora</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderProxiesTable() {
+      if (!STATE) return;
+      document.getElementById('proxiesTableBody').innerHTML = (STATE.proxies || []).map(p => `
+        <tr class="hover:bg-slate-800/40">
+          <td class="py-2 font-mono text-slate-400">#${p.id}</td>
+          <td class="py-2 font-mono text-white">${p.host}:${p.puerto}</td>
+          <td class="py-2 font-mono text-slate-400">${p.usuario}</td>
+          <td class="py-2"><span class="badge bg-blue-500/20 text-blue-300">${p.geo}</span> ${p.ciudad}</td>
+          <td class="py-2 font-mono text-slate-400">${p.timezone}</td>
+          <td class="py-2 font-semibold ${p.cuentas_asignadas > 0 ? 'text-amber-400' : 'text-emerald-400'}">${p.cuentas_asignadas}/1 cuenta (Sticky)</td>
+          <td class="py-2 font-bold text-emerald-400">${p.salud}%</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderAliasesTable() {
+      if (!STATE) return;
+      document.getElementById('aliasesTableBody').innerHTML = (STATE.aliases || []).map(a => `
+        <tr class="hover:bg-slate-800/40">
+          <td class="py-2 font-mono text-blue-400">${a.alias_email}</td>
+          <td class="py-2 text-slate-300">${a.fallos}/3</td>
+          <td class="py-2"><span class="badge ${a.quemado ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400'}">${a.quemado ? 'QUEMADO' : 'ACTIVO'}</span></td>
+          <td class="py-2 font-mono text-amber-400">${a.codigo_ultimo || '-'}</td>
+          <td class="py-2 text-slate-500">${(a.creado_en || '').slice(0, 19).replace('T', ' ')}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderLogsTable() {
+      if (!STATE) return;
+      const comp = document.getElementById('logComponentFilter').value;
+      const rows = (STATE.logs || []).filter(l => !comp || l.componente === comp);
+      document.getElementById('logsTableBody').innerHTML = rows.map(l => `
+        <tr class="hover:bg-slate-800/40">
+          <td class="py-1.5 text-slate-500 whitespace-nowrap">${(l.ts || '').slice(11, 19)}</td>
+          <td class="py-1.5"><span class="badge ${l.nivel === 'ERROR' || l.nivel === 'WARN' ? 'bg-amber-500/20 text-amber-300' : 'bg-blue-500/20 text-blue-300'}">${l.nivel}</span></td>
+          <td class="py-1.5 text-cyan-400">${l.componente}</td>
+          <td class="py-1.5 text-slate-400">${l.cuenta_id ? '#' + l.cuenta_id : '-'}</td>
+          <td class="py-1.5 text-slate-200">${l.mensaje}</td>
+        </tr>
+      `).join('');
+    }
+
+    async function dispatchCommand(cmd, extra = {}) {
+      showToast(`Enviando orden '${cmd}' a Hermes Agent...`);
+      const res = await fetch('/api/dispatch', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({comando: cmd, ...extra})
+      });
+      const data = await res.json();
+      if (data.result && data.result.error) {
+        showToast('Aviso: ' + data.result.error);
+      } else {
+        showToast(`Orden '${cmd}' ejecutada por Hermes Agent.`);
+      }
+      await fetchState();
+    }
+
+    async function quickCreateAccount() {
+      await dispatchCommand('create_account_now', {cantidad: 1, pais: 'US', nicho: 'inmigracion_legal'});
+      switchTab(3);
+    }
+
+    async function submitAccountCode(cuenta_id) {
+      const inp = document.getElementById('code-inp-' + cuenta_id);
+      const code = inp ? inp.value.trim() : '';
+      if (!code || code.length < 6) {
+        showToast('Ingresa el código de 6 dígitos que llegó a tu correo.');
+        return;
+      }
+      await dispatchCommand('submit_code', {cuenta_id, code});
+    }
+
+    async function runFarmForProfile(madre_id) {
+      const custom_comment = (document.getElementById('customFarmComment') || {}).value || '';
+      await dispatchCommand('run_farm_now', {madre_id, custom_comment});
+    }
+
+    async function createFromFactoryForm() {
+      const cantidad = parseInt(document.getElementById('fabCantidad').value || '1', 10);
+      const pais = document.getElementById('fabPais').value;
+      const nicho = document.getElementById('fabNicho').value;
+      await dispatchCommand('create_account_now', {cantidad, pais, nicho});
+      switchTab(3);
+    }
+
+    async function saveFactorySettings(activa) {
+      const cuentas_por_dia = parseInt(document.getElementById('fabMetaDiaria').value || '5', 10);
+      const pais_objetivo = document.getElementById('fabPais').value;
+      await fetch('/api/control/toggle_factory', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({activa, cuentas_por_dia, pais_objetivo})
+      });
+      showToast(activa ? 'Fábrica configurada y activa.' : 'Fábrica programada en pausa.');
+      await fetchState();
+    }
+
+    async function accountAction(cuenta_id, action) {
+      const res = await fetch('/api/account/action', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({cuenta_id, action})
+      });
+      const data = await res.json();
+      showToast(data.message || `Acción '${action}' aplicada a cuenta #${cuenta_id}`);
+      await fetchState();
+    }
+
+    async function toggleKillSwitch() {
+      const enable = !(STATE && STATE.killswitch);
+      await fetch('/api/control/killswitch', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({enable})
+      });
+      showToast(enable ? 'PAUSA TOTAL ACTIVADA.' : 'Motor Hermes Agent Reanudado.');
+      await fetchState();
+    }
+
+    async function retryFailedAccounts() {
+      const res = await fetch('/api/control/retry_failed', {method: 'POST', body: '{}'});
+      const data = await res.json();
+      showToast(`Reintentando ${data.retried || 0} cuentas.`);
+      await fetchState();
+    }
+
+    async function addMadreAccount() {
+      const username = document.getElementById('newMadreUsername').value;
+      const objetivo_seguidores = document.getElementById('newMadreObj').value;
+      if (!username) return;
+      await fetch('/api/farm/madre', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({action: 'add', username, objetivo_seguidores})
+      });
+      document.getElementById('newMadreUsername').value = '';
+      showToast('Cuenta madre registrada.');
+      await fetchState();
+    }
+
+    async function assignAllBotsToMadre(madre_id) {
+      await fetch('/api/farm/madre', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({action: 'assign_all', madre_id})
+      });
+      showToast('Todos los bots activos fueron asignados a la cuenta madre.');
+      await fetchState();
+    }
+
+    async function checkAllProxies() {
+      showToast('Verificando conectividad de los proxies...');
+      await fetch('/api/proxies/manage', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({action: 'check_all'})
+      });
+      showToast('Salud del pool de proxies actualizada.');
+      await fetchState();
+    }
+
+    async function addBulkProxies() {
+      const raw_lines = document.getElementById('bulkProxiesInput').value;
+      const res = await fetch('/api/proxies/manage', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({action: 'add_bulk', raw_lines})
+      });
+      const data = await res.json();
+      document.getElementById('bulkProxiesInput').value = '';
+      showToast(`Agregados ${data.added || 0} proxies nuevos.`);
+      await fetchState();
+    }
+
+    async function verifyMailAndDns() {
+      const box = document.getElementById('mailAuditResult');
+      box.textContent = 'Consultando DNS (SPF/DMARC/MX) y servidor IMAP Porkbun...';
+      const res = await fetch('/api/mail/check');
+      const data = await res.json();
+      box.innerHTML = `
+        <div><strong>Dominio:</strong> <span class="text-blue-400 font-mono">${data.dns.domain}</span></div>
+        <div><strong>MX Activo:</strong> ${data.dns.mx ? '✅ Sí' : '⚠️ Pendiente'} | <strong>SPF:</strong> ${data.dns.spf ? '✅ Sí' : '⚠️ No detectado'} | <strong>DMARC:</strong> ${data.dns.dmarc ? '✅ Sí' : '⚠️ Opcional'}</div>
+        <div><strong>Detalles DNS:</strong> ${(data.dns.details || []).join(' · ')}</div>
+        <div><strong>Estado Buzón IMAP:</strong> <span class="${data.imap.ok ? 'text-emerald-400' : 'text-amber-400'}">${data.imap.message}</span></div>
+      `;
+    }
+
+    async function testMailRegex() {
+      const sample_text = document.getElementById('sampleEmailText').value;
+      const res = await fetch('/api/mail/test_parser', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({sample_text})
+      });
+      const data = await res.json();
+      document.getElementById('regexTestOutput').textContent =
+        `Código extraído: ${data.extracted.code || 'Ninguno'} | Link: ${data.extracted.link || 'Ninguno'}`;
+    }
+
+    document.getElementById('yamlEditor').addEventListener('input', () => { yamlEdited = true; });
+
+    async function saveYamlConfig() {
+      const raw_yaml = document.getElementById('yamlEditor').value;
+      const res = await fetch('/api/config/save', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({raw_yaml, nota: 'Editado en caliente desde Dashboard'})
+      });
+      const data = await res.json();
+      if (data.ok) yamlEdited = false;
+      showToast(data.message);
+      await fetchState();
+    }
+
+    fetchState();
+    setInterval(fetchState, 6000);
+  </script>
+</body>
+</html>

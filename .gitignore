@@ -1,0 +1,16 @@
+config.yaml
+.env
+.env.*
+!.env.example
+contexts/
+database/
+logs/
+evidence/
+avatars/
+__pycache__/
+*.pyc
+*.sqlite*
+*.db
+*.pem
+*.key
+node_modules/

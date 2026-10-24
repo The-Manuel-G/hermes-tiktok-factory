@@ -1,0 +1,27 @@
+version: "3.9"
+services:
+  hermes-tiktok-dashboard:
+    build: .
+    container_name: hermes_tiktok_dashboard
+    restart: unless-stopped
+    ports:
+      - "8085:8085"
+    volumes:
+      - ./config.yaml:/app/config.yaml
+      - ./database:/app/database
+      - ./contexts:/app/contexts
+      - ./evidence:/app/evidence
+      - ./logs:/app/logs
+    command: ["python", "dashboard/dashboard_service.py"]
+
+  hermes-tiktok-worker:
+    build: .
+    container_name: hermes_tiktok_worker
+    restart: unless-stopped
+    volumes:
+      - ./config.yaml:/app/config.yaml
+      - ./database:/app/database
+      - ./contexts:/app/contexts
+      - ./evidence:/app/evidence
+      - ./logs:/app/logs
+    command: ["sh", "-c", "while true; do python jobs/hermes_orchestrator_job.py --cron; sleep 300; done"]
